@@ -1,6 +1,11 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
 const UserModel = require('../Model/User'); 
 
+dotenv.config({
+    path: '../config.env'
+})
 const router = express.Router();
 
 
@@ -56,16 +61,90 @@ router.post('/signin', async (req,res)=>{
         if(!user || !isValidate){
             throw Error('Email or password is incorrect');
         }
+
+        const token = createToken(user._id);
+
+        // createSendToken(user._id, req, res);
     
         res.status(200).json({
-            message: 'Login sucess'
+            message: 'Login sucess',
+            token
         })
         
     } catch (error) {
+        console.log(error);
         res.status(401).json({
             message: error.message
         });
     }
 });
+
+
+router.get('/post', isLoggin, async(req, res)=>{
+    const {id} = res.locals.user;
+
+    const user = await UserModel.findById(id);
+
+    res.status(200).json({
+        message: 'You allowed!',
+        name: user.name
+    });
+});
+
+router.get('/logout', (req, res)=>{
+    // console.log(res.locals.user);
+    res.status(200).json({
+        message: 'Successfully log out!'
+    });
+});
+
+
+
+
+
+
+
+function createToken(id){
+    return jwt.sign({id}, process.env.TOKEN_SECRET, {
+        expiresIn: '1d'
+    });
+}
+
+
+function createSendToken(id, req, res){
+    const token = createToken({id});
+
+    const cookieOptions = {
+        expires: (new Date(Date.now()+ 86400*1000)).toUTCString(),
+        httpOnly: true
+    }
+
+    res.cookie('jwt', token, cookieOptions);
+}
+
+
+function isLoggin(req, res, next){
+    const authHeaders = req.headers['authorization'];
+    if(!authHeaders){
+        return res.status(403).json({
+            message: `You're not logged in!`
+        });
+    }
+    const token = authHeaders.split(' ')[1];
+
+    // const token = res.cookie.jwt.id;
+
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, data)=>{
+        res.locals.user = data;
+        if(err){
+            return res.status(403).json({
+                message: 'Not allowed'
+            });
+        }
+
+        next();
+    })
+}
+
 
 module.exports = router;
