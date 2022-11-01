@@ -1,3 +1,4 @@
+const path = require('path');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const express = require('express');
@@ -7,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const userRouter = require('../Router/UserRoute');
 
 dotenv.config({
-    path: '../config.env'
+    path: path.resolve(__dirname, '../config.env')
 });
 
 const app = express();
