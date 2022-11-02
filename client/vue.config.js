@@ -11,5 +11,14 @@ module.exports = defineConfig({
 			additionalData: [...bootstrapSassAbstractsImports, ''].join(';\n')
 		}
 	}
+  },
+  devServer: {
+	proxy: {
+		'/api':{
+			target: 'http://localhost:8000/api',
+			changeOrigin: true,
+			pathRewrite: {'^/api':''}
+		}
+	}
   }
 })

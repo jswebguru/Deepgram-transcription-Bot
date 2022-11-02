@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
 const UserModel = require('../Model/User'); 
 
 dotenv.config({
@@ -23,11 +24,11 @@ router.post('/signup', async(req, res)=>{
         const email = req.body.email;
         const passwordEncrypt = await bcrypt.hash(req.body.password, 12);
     
-        await UserModel.create({
-            name,
-            email,
-            password: passwordEncrypt
-        });
+        // await UserModel.create({
+        //     name,
+        //     email,
+        //     password: passwordEncrypt
+        // });
     
         res.status(200).json({
             name,

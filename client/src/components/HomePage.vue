@@ -1,11 +1,12 @@
 <template>
   <div>
+    <form-authenticate :openForm="isFormOpen" @isOpenForm="isOpenForm"></form-authenticate>
     <div class="HomePage">
       <b-row class="HomePage__header">
         <b-col class="HomePage__title">SpeechParser</b-col>
         <b-col class="HomePage__holderList">
           <ul class="HomePage__listButton">
-            <li class="HomePage__btnSignUp" title="Sign Up">Sign Up</li>
+            <li class="HomePage__btnSignUp" title="Sign Up" @click="openSignUpForm">Sign Up</li>
             <li class="HomePage__btnLogIn" title="Log In">Log In</li>
           </ul>
         </b-col>
@@ -14,7 +15,7 @@
         <b-col class="HomePage__mainOne" cols="7">
           <span class="HomePage__titleMain">Explore the power of Machine Learning through video transcription</span>
           <div class="HomePage__holderBtnAndPowered">
-            <button class="HomePage__btnSignUpMain" title="Sign Up">Sign Up</button>
+            <button class="HomePage__btnSignUpMain" title="Sign Up" @click="openSignUpForm">Sign Up</button>
             <span class="HomePage__powered">Powered by DeepGram</span>
           </div>
           <span class="HomePage__quote">“People worry that computers will get too smart and take over the world, but the real problem is that they're too stupid and they've already taken over the world.” ― Pedro Domingos</span>
@@ -26,11 +27,30 @@
     </div>
   </div>
 </template>
+
 <script>
+import FormAuthenticate from '../components/FormAuthenticate.vue';
 export default {
-  
+  data() {
+    return {
+      isFormOpen: false
+    }
+  },
+  components: {
+    FormAuthenticate
+  },
+  methods: {
+    openSignUpForm(){
+      console.log('Im clicked');
+      this.isFormOpen = true;
+    },
+    isOpenForm(value){
+      this.isFormOpen = value;
+    }
+  },
 }
 </script>
+
 <style lang="scss">
   @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
