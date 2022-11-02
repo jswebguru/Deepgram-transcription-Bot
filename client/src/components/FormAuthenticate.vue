@@ -89,7 +89,7 @@ export default {
     methods: {
         async submitForm(){
             try {
-                const requestSignUp = await axios.post('/api/v1/user/signup', {
+                const requestSignUp = await axios.post('/signup', {
                     name: this.signUp.name,
                     email: this.signUp.email,
                     password: this.signUp.password,
