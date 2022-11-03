@@ -53,7 +53,8 @@ router.post('/signin', async (req,res)=>{
         }
 
         const user = await UserModel.findOne({
-            email: 'mfitrie78@gmail.com'
+            // email: 'mfitrie78@gmail.com'
+            email
         })
         .select('+password');
     
@@ -63,13 +64,13 @@ router.post('/signin', async (req,res)=>{
             throw Error('Email or password is incorrect');
         }
 
-        const token = createToken(user._id);
+        // const token = createToken(user._id);
 
-        // createSendToken(user._id, req, res);
+        createSendToken(user._id, req, res);
     
         res.status(200).json({
             message: 'Login sucess',
-            token
+            // token
         })
         
     } catch (error) {
@@ -116,7 +117,8 @@ function createSendToken(id, req, res){
     const token = createToken({id});
 
     const cookieOptions = {
-        expires: (new Date(Date.now()+ 86400*1000)).toUTCString(),
+        expire: 360000 + Date.now(),
+        // expires: (new Date(Date.now()+ 86400*1000)).toUTCString(),
         httpOnly: true
     }
 

@@ -1,13 +1,13 @@
 <template>
   <div>
-    <form-authenticate :openForm="isFormOpen" @isOpenForm="isOpenForm"></form-authenticate>
+    <form-authenticate :openForm="isFormOpen" :loginForm="loginForm" @isOpenForm="isOpenForm" @isOpenLoginForm="isOpenLoginForm"></form-authenticate>
     <div class="HomePage">
       <b-row class="HomePage__header">
         <b-col class="HomePage__title">SpeechParser</b-col>
         <b-col class="HomePage__holderList">
           <ul class="HomePage__listButton">
             <li class="HomePage__btnSignUp" title="Sign Up" @click="openSignUpForm">Sign Up</li>
-            <li class="HomePage__btnLogIn" title="Log In">Log In</li>
+            <li class="HomePage__btnLogIn" title="Log In" @click="openLoginForm">Log In</li>
           </ul>
         </b-col>
       </b-row>
@@ -16,7 +16,7 @@
           <span class="HomePage__titleMain">Explore the power of Machine Learning through video transcription</span>
           <div class="HomePage__holderBtnAndPowered">
             <button class="HomePage__btnSignUpMain" title="Sign Up" @click="openSignUpForm">Sign Up</button>
-            <span class="HomePage__powered">Powered by DeepGram</span>
+            <span class="HomePage__powered" >Powered by DeepGram</span>
           </div>
           <span class="HomePage__quote">“People worry that computers will get too smart and take over the world, but the real problem is that they're too stupid and they've already taken over the world.” ― Pedro Domingos</span>
         </b-col>
@@ -33,7 +33,8 @@ import FormAuthenticate from '../components/FormAuthenticate.vue';
 export default {
   data() {
     return {
-      isFormOpen: false
+      isFormOpen: false,
+      loginForm: false
     }
   },
   components: {
@@ -46,6 +47,13 @@ export default {
     },
     isOpenForm(value){
       this.isFormOpen = value;
+    },
+    openLoginForm(){  
+      this.openSignUpForm();
+      this.loginForm = true;
+    },
+    isOpenLoginForm(value){
+      this.loginForm = value
     }
   },
 }
@@ -59,6 +67,7 @@ export default {
     --btn-color: #E67E22;
     --dark-btn-color: #CF6D17;
     --flatUI-red: #E74C3C;
+    --flatUI-green: #2ecc71;
   }
   
   *{

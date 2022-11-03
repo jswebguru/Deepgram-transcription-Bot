@@ -18,7 +18,12 @@ module.exports = defineConfig({
 			target: 'http://localhost:8000/api/v1/user/signup',
 			changeOrigin: true,
 			pathRewrite: {'^/signup':''}
-		}
+		},
+		'/signin':{
+			target: 'http://localhost:8000/api/v1/user/signin',
+			changeOrigin: true,
+			pathRewrite: {'^/signin':''}
+		},
 	}
   }
 })

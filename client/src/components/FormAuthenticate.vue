@@ -3,13 +3,15 @@
         <b-col class="Form__background"></b-col>
         <b-col class="Form__formFill">
             <Icon class="Form__iconClose" icon="fe:close" title="Close form"></Icon>
-            <span class="Form__titleForm">Sign Up</span>
+            <span class="Form__titleForm" v-if="loginForm" >Log In</span>
+            <span class="Form__titleForm" v-if="!loginForm" >Sign Up</span>
             <b-form class="Form__FormInput" @submit.prevent="submitForm">
                 <b-form-group 
                     class="Form__inputName"
                     id="name"
                     label="Name"
                     label-for="input_name"
+                    v-if="!loginForm"
                 >
                     <b-form-input
                         id="input_name"
@@ -26,6 +28,24 @@
                     id="email"
                     label="Email"
                     label-for="input_email"
+                    v-if="loginForm"
+                >
+                    <b-form-input
+                        id="input_email"
+                        type="email"
+                        v-model="login.email"
+                        placeholder="Enter your email"
+                        required
+                    >
+                    </b-form-input>
+                </b-form-group>
+
+                <b-form-group 
+                    class="Form__inputEmail"
+                    id="email"
+                    label="Email"
+                    label-for="input_email"
+                    v-if="!loginForm"
                 >
                     <b-form-input
                         id="input_email"
@@ -42,6 +62,24 @@
                     id="password"
                     label="Password"
                     label-for="input_password"
+                    v-if="loginForm"
+                >
+                    <b-form-input
+                        id="input_password"
+                        type="password"
+                        v-model="login.password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                    </b-form-input>
+                </b-form-group>
+
+                <b-form-group 
+                    class="Form__inputPassword"
+                    id="password"
+                    label="Password"
+                    label-for="input_password"
+                    v-if="!loginForm"
                 >
                     <b-form-input
                         id="input_password"
@@ -53,7 +91,8 @@
                     </b-form-input>
                 </b-form-group>
 
-                <b-button class="Form__formSubmit" type="submit">Sign Up</b-button>
+                <b-button class="Form__formSubmit" type="submit" v-if="!loginForm">Sign Up</b-button>
+                <b-button class="Form__formSubmit" type="submit" v-if="loginForm">Log In</b-button>
             </b-form>
         </b-col>
     </div>
@@ -62,6 +101,7 @@
 <script>
 import {Icon} from '@iconify/vue2';
 import axios from 'axios';
+import Toastify from 'toastify-js';
 
 export default {
     name: 'FormAuthenticate',
@@ -69,9 +109,13 @@ export default {
         openForm: {
             type: Boolean,
             default: false
+        },
+        loginForm: {
+            type: Boolean,
+            default: false
         }
     },
-    emit:['isOpenForm'],
+    emit:['isOpenForm','isOpenLoginForm'],
     data() {
         return {
             formBehaviour: 'Form Form--close Form--moveback',
@@ -79,6 +123,10 @@ export default {
                 name: '',
                 email: '',
                 password: ''
+            },
+            login: {
+                email: '',
+                password: ''   
             }
         }
     },
@@ -89,33 +137,95 @@ export default {
     methods: {
         async submitForm(){
             try {
-                const requestSignUp = await axios.post('/signup', {
-                    name: this.signUp.name,
-                    email: this.signUp.email,
-                    password: this.signUp.password,
-                }, {
-                    headers: {
-                        'Content-Type': 'application/json'
+                
+                let isSignUpForm = false;
+                let isLoginForm = false;
+
+                for(let key of Object.keys(this.signUp)){
+                    if(this.signUp[key] !== ''){
+                        isSignUpForm = true;
+                        break; 
                     }
-                });
+                }
+
+                for(let key of Object.keys(this.login)){
+                    if(this.login[key] !== ''){
+                        isLoginForm = true;
+                        break; 
+                    }
+                }
+
+
+                if(isSignUpForm){
+                    const requestSignUp = await axios.post('/signup', {
+                        name: this.signUp.name,
+                        email: this.signUp.email,
+                        password: this.signUp.password,
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+        
+                    console.log(requestSignUp.data);
+        
+                    this.signUp.name = '';
+                    this.signUp.email = '';
+                    this.signUp.password = '';
     
-                console.log(requestSignUp.data);
+                    this.alertToastify(`Sign up successful`, 'var(--flatUI-green)');
+                    return;
+                }
+
+                if(isLoginForm){
+                    const requestLogin = await axios.post('/signin', {
+                        email: this.login.email,
+                        password: this.login.password,
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+        
+                    console.log(requestLogin.data);
+        
+                    this.login.email = '';
+                    this.login.password = '';
     
-                this.signUp.name = '';
-                this.signUp.email = '';
-                this.signUp.password = '';
+                    this.alertToastify(`Sign in successful`, 'var(--flatUI-green)');
+                    return;
+                }
+
                 
             } catch (error) {
-                console.log(error);
+                const errorStatus = error.request.status;
+                this.alertToastify(`Error ${errorStatus}`, 'var(--flatUI-red)');
             }
+
+
         },
         closeForm(){
             const SECONDS = 500;
             this.formBehaviour = 'Form Form--close'
             setTimeout(()=>{
                 this.formBehaviour = 'Form Form--close Form--moveback'
-                this.$emit('isOpenForm', false)
+                this.$emit('isOpenForm', false);
+                this.$emit('isOpenLoginForm', false);
             }, SECONDS) 
+        },
+        alertToastify(message, color){
+            Toastify({
+                text: message,
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: color,
+                },
+            }).showToast();
         }
     },
     watch: {
@@ -140,6 +250,7 @@ export default {
 </script>
 
 <style lang="scss">
+    @import "toastify-js/src/toastify.css"; 
     .Form{
         z-index: 3;
         position: fixed;
