@@ -1,20 +1,24 @@
 <template>
   <div id="app">
-    <home-page></home-page>
+    <!-- <nav>
+      <router-link to="/">Home</router-link> |
+      <router-link to="/about">About</router-link>
+    </nav> -->
+    <router-view/>
   </div>
 </template>
 
-<script>
-import HomePage from './components/HomePage.vue'
+<style lang="scss">
+nav {
+  padding: 30px;
 
-export default {
-  name: 'App',
-  components: {
-    HomePage
+  a {
+    font-weight: bold;
+    color: #2c3e50;
+
+    &.router-link-exact-active {
+      color: #42b983;
+    }
   }
 }
-</script>
-
-<style lang="scss">
-@import "~@/assets/scss/vendors/bootstrap-vue/index";
 </style>

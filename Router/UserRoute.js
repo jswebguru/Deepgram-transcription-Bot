@@ -57,10 +57,14 @@ router.post('/signin', async (req,res)=>{
             email
         })
         .select('+password');
-    
+
+        if(!user){
+            throw Error('Email or password is incorrect');
+        }
+
         const isValidate = await user.correctPassword(password, user.password);
         
-        if(!user || !isValidate){
+        if(!isValidate){
             throw Error('Email or password is incorrect');
         }
 
@@ -82,21 +86,30 @@ router.post('/signin', async (req,res)=>{
 });
 
 
-router.get('/post', isLoggin, async(req, res)=>{
+router.get('/home', isLoggin, async(req, res)=>{
     const {id} = res.locals.user;
 
     const user = await UserModel.findById(id);
 
     res.status(200).json({
         message: 'You allowed!',
-        name: user.name
+        name: user.name,
+        isLogin: true
     });
 });
 
 router.get('/logout', (req, res)=>{
     // console.log(res.locals.user);
+
+    res.cookie('jwt','loggedout', {
+        // 10 seconds
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    })
+
     res.status(200).json({
-        message: 'Successfully log out!'
+        message: 'Successfully log out!',
+        isLogin: false
     });
 });
 
@@ -114,7 +127,7 @@ function createToken(id){
 
 
 function createSendToken(id, req, res){
-    const token = createToken({id});
+    const token = createToken(id);
 
     const cookieOptions = {
         expire: 360000 + Date.now(),
@@ -126,27 +139,28 @@ function createSendToken(id, req, res){
 }
 
 
-function isLoggin(req, res, next){
-    const authHeaders = req.headers['authorization'];
-    if(!authHeaders){
-        return res.status(403).json({
-            message: `You're not logged in!`
-        });
-    }
-    const token = authHeaders.split(' ')[1];
+async function isLoggin(req, res, next){
+    // const authHeaders = req.headers['authorization'];
+    // if(!authHeaders){
+    //     return res.status(403).json({
+    //         message: `You're not logged in!`
+    //     });
+    // }
+    // const token = authHeaders.split(' ')[1];
 
-    // const token = res.cookie.jwt.id;
+    const token = req.cookies.jwt;
 
     jwt.verify(token, process.env.TOKEN_SECRET, (err, data)=>{
-        res.locals.user = data;
         if(err){
             return res.status(403).json({
-                message: 'Not allowed'
+                message: 'Not allowed',
+                isLogin: false
             });
         }
-
+        console.log(data);
+        res.locals.user = data;
         next();
-    })
+    });
 }
 
 

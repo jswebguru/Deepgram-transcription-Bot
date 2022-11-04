@@ -192,14 +192,19 @@ export default {
                     this.login.email = '';
                     this.login.password = '';
     
-                    this.alertToastify(`Sign in successful`, 'var(--flatUI-green)');
+                    this.alertToastify(`Log in successful`, 'var(--flatUI-green)');
+
+                    location.assign('/userhome');
+
                     return;
                 }
 
                 
             } catch (error) {
-                const errorStatus = error.request.status;
-                this.alertToastify(`Error ${errorStatus}`, 'var(--flatUI-red)');
+                // const errorStatus = error.request.status;
+                const errorMessage = error.response.data.message;
+                // this.alertToastify(`Error ${errorStatus}`, 'var(--flatUI-red)');
+                this.alertToastify(`${errorMessage}`, 'var(--flatUI-red)');
             }
 
 

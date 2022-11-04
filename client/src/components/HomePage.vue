@@ -3,6 +3,9 @@
     <form-authenticate :openForm="isFormOpen" :loginForm="loginForm" @isOpenForm="isOpenForm" @isOpenLoginForm="isOpenLoginForm"></form-authenticate>
     <div class="HomePage">
       <b-row class="HomePage__header">
+        <!-- <b-col class="HomePage__title">
+          <a href="/userhome" @click="LogInAndMove($event)"> SpeechParser</a>
+        </b-col> -->
         <b-col class="HomePage__title">SpeechParser</b-col>
         <b-col class="HomePage__holderList">
           <ul class="HomePage__listButton">
@@ -29,6 +32,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import FormAuthenticate from '../components/FormAuthenticate.vue';
 export default {
   data() {
@@ -54,7 +58,22 @@ export default {
     },
     isOpenLoginForm(value){
       this.loginForm = value
-    }
+    },
+    // LogInAndMove(){
+    //   location.assign('/userhome');
+    // }
+  },
+  mounted() {
+    axios.get('/home')
+    .then(res=>{
+      console.log(res);
+      if(res.data.isLogin){
+        location.assign('/userhome');
+      }
+    })
+    .catch(err=>{
+      console.log(err);
+    });
   },
 }
 </script>
@@ -93,7 +112,7 @@ export default {
     height: 10vh;
     box-shadow: rgba(17, 12, 46, 0.07) 0px 48px 100px 0px;
 
-    .HomePage__title{
+    .HomePage__title {
       // background-color: red;
       font-size: 1.5rem;
       display: grid;

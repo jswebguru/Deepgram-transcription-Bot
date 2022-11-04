@@ -24,6 +24,16 @@ module.exports = defineConfig({
 			changeOrigin: true,
 			pathRewrite: {'^/signin':''}
 		},
+		'/home':{
+			target: 'http://localhost:8000/api/v1/user/home',
+			changeOrigin: true,
+			pathRewrite: {'^/home':''}
+		},
+		'/logout':{
+			target: 'http://localhost:8000/api/v1/user/logout',
+			changeOrigin: true,
+			pathRewrite: {'^/logout':''}
+		},
 	}
   }
 })
