@@ -29,6 +29,11 @@ module.exports = defineConfig({
 			changeOrigin: true,
 			pathRewrite: {'^/home':''}
 		},
+		'upload': {
+			target: 'http://localhost:8000/api/v1/user/upload',
+			changeOrigin: true,
+			pathRewrite: {'^/upload':''}
+		},
 		'/logout':{
 			target: 'http://localhost:8000/api/v1/user/logout',
 			changeOrigin: true,

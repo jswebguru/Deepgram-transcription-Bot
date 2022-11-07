@@ -2,12 +2,40 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
 const UserModel = require('../Model/User'); 
 
 dotenv.config({
     path: '../config.env'
 })
 const router = express.Router();
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb)=>{
+        const filePath = path.resolve(__dirname, '../videos');
+        if(fs.existsSync(filePath)){
+            cb(null, filePath);
+        }else{
+            fs.mkdir(filePath, (err)=>{
+                if(err){
+                    return console.error(err);
+                }
+                
+                cb(null, filePath);
+            })
+        }
+    },
+    filename: (req, file, cb)=>{
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({
+    storage
+})
 
 
 
@@ -97,6 +125,14 @@ router.get('/home', isLoggin, async(req, res)=>{
         isLogin: true
     });
 });
+
+
+router.post('/upload', isLoggin, upload.single('video'), (req, res)=>{
+    res.status(200).json({
+        message: "Successfully uploaded files"
+    });
+});
+
 
 router.get('/logout', (req, res)=>{
     // console.log(res.locals.user);

@@ -11,6 +11,11 @@
         </b-col>
       </b-row>
       <b-row class="UserHome__main">
+        <div class="UserHome__uploadHolder">
+          <span class="UserHome__titleOne">Upload the Video for Transcription</span>
+          <span class="UserHome__titleTwo">Click on the button or drag & drop files here</span>
+          <button class="UserHome__buttonUpload" @click="uploadFiles">Upload</button>
+        </div>
       </b-row>
     </div>
   </div>
@@ -24,6 +29,7 @@ export default {
   data() {
     return {
       username: '',
+      videoFile: []
     }
   },
   methods: {
@@ -40,6 +46,34 @@ export default {
             console.log(error);
         }
 
+    },
+    async uploadFiles(){
+      const input = document.createElement('input');
+      input.type = 'file';
+      // input.name = 'video';
+      input.click();
+
+      input.onchange = async ()=>{
+        const fileSelected = input.files[0];
+        console.log(fileSelected);
+
+        const form = new FormData();
+        form.append('video', fileSelected);
+
+        try {
+          await axios.post('/upload', form, {
+            headers: {
+              "Content-Type": "multipart/form-data"
+            }
+          });
+
+          // console.log(postData.data.message);
+          this.alertToastify('Upload Successful!', 'var(--flatUI-green)');
+
+        } catch (error) {
+         console.log(error); 
+        }
+      }
     },
     alertToastify(message, color){
         Toastify({
@@ -137,6 +171,53 @@ export default {
 
   .UserHome__main{
     height: 90vh;
+    justify-content: center;
+    align-content: center;
+
+    .UserHome__uploadHolder{
+      width: 60%;
+      height: 60%;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+      display: grid;
+      grid-template-rows: 25% 25% 50%;
+      justify-content: center;
+      border: 1px solid #eee;
+
+      .UserHome__titleOne{
+        font-weight: 700;
+        font-size: 1.3rem;
+        text-align: center;
+        padding-top: 4rem;
+        // background-color: aqua;
+      }
+
+      .UserHome__titleTwo{
+        text-align: center;
+        padding-top: 1rem;
+        font-size: 1.3rem;
+        // background-color: yellow;
+      }
+
+      .UserHome__buttonUpload{
+        margin-top: 2rem;
+        justify-self: center;
+        // align-self: center;
+        width: 20rem;
+        height: 3rem;
+        border: 0;
+        color: #fff;
+        border-radius: 10px;
+        background-color: var(--btn-color);
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+        transition: 0.3s ease-in-out;
+
+        &:hover{
+          background-color: var(--dark-btn-color);
+        }
+      }
+    }
   }
 
 </style>
