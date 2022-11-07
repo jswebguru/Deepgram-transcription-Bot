@@ -18,6 +18,8 @@
 
 <script>
 import axios from 'axios';
+import Toastify from 'toastify-js';
+
 export default {
   data() {
     return {
@@ -29,11 +31,29 @@ export default {
         try {
             const response = await axios.get('/logout');
             console.log(response.data);
-            location.assign('/');
+
+            this.alertToastify(`Log out successful`, 'var(--flatUI-green)');
+            setTimeout(()=>{
+              location.assign('/');
+            }, 1000);
         } catch (error) {
             console.log(error);
         }
 
+    },
+    alertToastify(message, color){
+        Toastify({
+            text: message,
+            duration: 3000,
+            newWindow: true,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "right", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: color,
+            },
+        }).showToast();
     }
   },
   mounted() {

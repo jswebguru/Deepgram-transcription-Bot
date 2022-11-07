@@ -32,7 +32,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import FormAuthenticate from '../components/FormAuthenticate.vue';
 export default {
   data() {
@@ -59,21 +58,6 @@ export default {
     isOpenLoginForm(value){
       this.loginForm = value
     },
-    // LogInAndMove(){
-    //   location.assign('/userhome');
-    // }
-  },
-  mounted() {
-    axios.get('/home')
-    .then(res=>{
-      console.log(res);
-      if(res.data.isLogin){
-        location.assign('/userhome');
-      }
-    })
-    .catch(err=>{
-      console.log(err);
-    });
   },
 }
 </script>

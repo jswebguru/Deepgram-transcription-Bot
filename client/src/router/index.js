@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import HomePage from '../components/HomePage.vue';
+import axios from 'axios';
 
 Vue.use(VueRouter)
 
@@ -32,6 +33,33 @@ const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
   routes
-})
+});
+
+// eslint-disable-next-line no-unused-vars
+router.beforeEach(async (to, from, next)=>{
+  // console.log('From');
+  // console.log(from);
+  // console.log('To');
+  // console.log(to);
+
+  try {
+    
+    const res = await axios.get('/home');
+    const isLogin = res.data.isLogin; 
+    console.log(isLogin);
+
+    if(isLogin && to.name === 'homepage'){
+      next({
+        name: 'userhome'
+      });
+    }else{
+      next();
+    }
+
+  } catch (error) {
+    console.log(error);
+  }
+  
+});
 
 export default router

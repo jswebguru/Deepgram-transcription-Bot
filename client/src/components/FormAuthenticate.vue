@@ -194,7 +194,9 @@ export default {
     
                     this.alertToastify(`Log in successful`, 'var(--flatUI-green)');
 
-                    location.assign('/userhome');
+                    setTimeout(()=>{
+                        location.assign('/userhome');
+                    }, 1000);
 
                     return;
                 }
