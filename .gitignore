@@ -2,3 +2,5 @@
 *.env
 *.rest
 *.xd
+/videos
+/video_metadata

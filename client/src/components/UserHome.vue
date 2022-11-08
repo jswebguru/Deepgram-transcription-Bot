@@ -11,10 +11,37 @@
         </b-col>
       </b-row>
       <b-row class="UserHome__main">
-        <div class="UserHome__uploadHolder">
+        <div :class="classUpload">
           <span class="UserHome__titleOne">Upload the Video for Transcription</span>
           <span class="UserHome__titleTwo">Click on the button or drag & drop files here</span>
           <button class="UserHome__buttonUpload" @click="uploadFiles">Upload</button>
+
+          <div class="UserHome__fileDescriptionHolder">
+            <div class="UserHome__IconAndDescription">
+              <div class="UserHome__holderIconFile">
+                <object class="UserHome__mainFileIcon" :data="fileIcon" type="image/svg+xml"></object>
+              </div>
+              <div class="UserHome__detailsFile">
+                <span class="UserHome__nameFileTitle">File Name</span>
+                <span class="UserHome__nameFile">Video 1</span>
+                <span class="UserHome__sizeTitle">Size</span>
+                <span class="UserHome__sizeFile">10Mb</span>
+              </div>
+            </div>
+            <div class="UserHome__btnHolder">
+              <b-button class="UserHome__btnUploadAgain" title="Upload Again" @click="uploadAgain">Upload Again</b-button>
+              <b-button class="UserHome__btnSaveTranscript" title="Save Transcript">Save Transcript</b-button>
+            </div>
+          </div>
+          <div class="UserHome__transcriptionHolder">
+            <span class="UserHome__transcriptionTitle">Transcription</span>
+            <div class="UserHome__mainTranscription">
+              <p class="UserHome__wordTranscription">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam?
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam?
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam? Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam? Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam?
+              </p>
+            </div>
+          </div>
         </div>
       </b-row>
     </div>
@@ -25,9 +52,13 @@
 import axios from 'axios';
 import Toastify from 'toastify-js';
 
+const fileIcon = require('@/assets/Icons/files-icon.svg');
+
 export default {
   data() {
     return {
+      fileIcon,
+      classUpload: 'UserHome__uploadHolder',
       username: '',
       videoFile: []
     }
@@ -69,11 +100,26 @@ export default {
 
           // console.log(postData.data.message);
           this.alertToastify('Upload Successful!', 'var(--flatUI-green)');
+          this.classActivateManipulator(true);
 
         } catch (error) {
          console.log(error); 
         }
       }
+    },
+    classActivateManipulator(isActive){
+      const classDeactivate = 'UserHome__uploadHolder';
+      const classActivate = 'UserHome__uploadHolder UserHome__uploadHolder--activeTranscript';
+
+      if(isActive){
+        this.classUpload = classActivate;
+      }else{
+        this.classUpload = classDeactivate;
+      }
+
+    },
+    uploadAgain(){
+      this.classActivateManipulator(false);
     },
     alertToastify(message, color){
         Toastify({
@@ -217,6 +263,137 @@ export default {
           background-color: var(--dark-btn-color);
         }
       }
+
+      .UserHome__fileDescriptionHolder,
+      .UserHome__transcriptionHolder{
+        display: none;
+        // opacity: 0;
+      }
+    }
+
+
+    .UserHome__uploadHolder--activeTranscript{
+      transition: transform 0.6s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+      height: 80%;
+      display: grid;
+      grid-template-columns: 40% 60%;
+      grid-template-rows: 100%;
+
+      .UserHome__buttonUpload,
+      .UserHome__titleOne,
+      .UserHome__titleTwo{
+        display: none;
+        // opacity: 0;
+      }
+
+      .UserHome__fileDescriptionHolder,
+      .UserHome__transcriptionHolder{
+        display: block;
+        // opacity: 100%;
+      }
+
+
+      .UserHome__fileDescriptionHolder{
+        // background-color: aqua;
+        border-right: 1px solid #ddd;
+        display: grid;
+        grid-template-rows: 70% 30%;
+        
+        .UserHome__IconAndDescription{
+          // background-color: greenyellow;
+          padding: 0 1rem 0 1rem;
+          display: grid;
+          grid-template-columns: 45% 55%;
+          grid-template-rows: 100%;
+
+          .UserHome__holderIconFile{
+            // background-color: red;
+            align-self: center;
+          }
+
+          .UserHome__detailsFile{
+            display: grid;
+            grid-template-rows: 10% 15% 10% 15%;
+            align-content: center;
+            padding: 0 1rem 0 1rem;
+
+            .UserHome__nameFileTitle,
+            .UserHome__sizeTitle{
+              font-size: 1.3rem;
+              font-weight: 700;
+            }
+
+            .UserHome__nameFile,
+            .UserHome__sizeFile{
+
+            }
+          }
+        }
+
+        .UserHome__btnHolder{
+          // background-color: violet;
+          display: grid;
+          grid-template-columns: 40% 40%;
+          align-content: center;
+          justify-content: center;
+          gap: 2rem;
+
+          .UserHome__btnUploadAgain,
+          .UserHome__btnSaveTranscript{
+            background-color: var(--btn-color);
+            border: var(--btn-color);
+            box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+            transition: 0.3s ease-in-out;
+            &:hover{
+              background-color: var(--dark-btn-color);
+            }
+          }
+
+        }
+      }
+
+      .UserHome__transcriptionHolder{
+        // background-color: yellow;
+        display: grid;
+        grid-template-rows: 20% 80%;
+
+        .UserHome__transcriptionTitle{
+          // background-color: aquamarine;
+          align-self: center;
+          justify-self: center;
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+        
+        .UserHome__mainTranscription{
+          // background-color: azure;
+          padding: 1rem;
+          max-width: 100%;
+          overflow: auto;
+          &::-webkit-scrollbar{
+            width: 8px;
+            height: 8px;
+          }
+          &::-webkit-scrollbar-track {
+            border-radius: 10px;
+            background: rgba(0,0,0,0.1);
+          }
+          .UserHome__wordTranscription{
+          }
+          &::-webkit-scrollbar-thumb{
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
+          }
+          &::-webkit-scrollbar-thumb:hover{
+            background: rgba(0,0,0,0.4);
+          }
+          &::-webkit-scrollbar-thumb:active{
+            background: rgba(0,0,0,.9);
+          }
+        }
+      }
+
+
     }
   }
 

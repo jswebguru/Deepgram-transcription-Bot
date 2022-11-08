@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
+const {v4: uuidv4} = require('uuid');
 const path = require('path');
 const fs = require('fs');
 
@@ -29,7 +30,7 @@ const storage = multer.diskStorage({
         }
     },
     filename: (req, file, cb)=>{
-        cb(null, file.originalname);
+        cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
 
@@ -128,10 +129,68 @@ router.get('/home', isLoggin, async(req, res)=>{
 
 
 router.post('/upload', isLoggin, upload.single('video'), (req, res)=>{
-    res.status(200).json({
-        message: "Successfully uploaded files"
-    });
+    try {
+        
+        const filePath = path.resolve(__dirname, '../video_metadata');
+        const videoId = uuidv4();
+        const videoObject = {
+            videoId,
+            ...req.file
+        };
+        const videoJSON = JSON.stringify(videoObject);
+    
+        if(fs.existsSync(filePath)){
+            // cb(null, filePath);
+            fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
+                if(err){
+                    throw err;
+                }
+            })
+        }else{
+            fs.mkdir(filePath, (err)=>{
+                if(err){
+                    throw err;
+                }
+    
+                fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
+                    if(err){
+                        throw err;
+                    }
+                });
+            })
+        }
+    
+        res.status(200).json({
+            message: "Successfully uploaded files"
+        });
+        
+    } catch (error) {
+        console.log(error);
+    }
 });
+
+
+// router.get('/video', (req, res)=>{
+//     const range = req.headers.range;
+//     if (!range) {
+//         res.status(400).send("Range not provided");
+//     }
+//     const videoPath = path.resolve(__dirname, '../videos/1667876936122-Dedsec live wallpaper.mp4');
+//     const videoSize = fs.statSync(videoPath).size;
+//     const chunkSize = 10 ** 6; // 1 mb
+//     const start = Number(range.replace(/\D/g, ""));
+//     const end = Math.min(start + chunkSize, videoSize - 1);
+//     const contentLength = end - start + 1;
+//     const headers = {
+//         "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+//         "Accept-Ranges": "bytes",
+//         "Content-Length": contentLength,
+//         "Content-Type": "video/mp4",
+//     };
+//     res.writeHead(206, headers);
+//     const videoStream = fs.createReadStream(videoPath, { start, end });
+//     videoStream.pipe(res);
+// });
 
 
 router.get('/logout', (req, res)=>{
