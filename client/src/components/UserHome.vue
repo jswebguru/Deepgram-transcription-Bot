@@ -33,7 +33,7 @@
             </div>
             <div class="UserHome__btnHolder">
               <b-button class="UserHome__btnUploadAgain" title="Upload Again" @click="uploadAgain">Upload Again</b-button>
-              <b-button class="UserHome__btnSaveTranscript" title="Save Transcript">Save Transcript</b-button>
+              <b-button class="UserHome__btnSaveTranscript" title="Save Transcript" @click="saveTranscript">Save Transcript</b-button>
             </div>
           </div>
           <div class="UserHome__transcriptionHolder">
@@ -65,6 +65,7 @@ export default {
       classBtnUploadLoading: 'UserHome__loadingIcon',
       username: '',
       videoData: {
+        fileId: '',
         filename: '',
         filesize: '',
         transcription: ''
@@ -120,7 +121,8 @@ export default {
 
           this.classLoadingBtnUploadManipulator(false);
 
-          const {filename, size, transcription} = postData.data;
+          const {fileId, filename, size, transcription} = postData.data;
+          this.videoData.fileId = fileId;
           this.videoData.filename = filename;
           this.videoData.filesize = size;
           this.videoData.transcription = transcription;
@@ -152,6 +154,16 @@ export default {
       const deactivate = 'UserHome__loadingIcon';
 
       isActive ? this.classBtnUploadLoading = active : this.classBtnUploadLoading = deactivate;
+
+    },
+    async saveTranscript(){
+      
+      const fileId = this.videoData.fileId;
+      const a = document.createElement('a');
+      a.href = `/downloadTranscript/${fileId}`;
+      a.click();
+
+      this.alertToastify('Downloading in progress', 'var(--flatUI-green)');
 
     },
     uploadAgain(){

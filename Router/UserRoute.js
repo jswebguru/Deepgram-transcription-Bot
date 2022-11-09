@@ -129,14 +129,16 @@ router.get('/home', isLoggin, async(req, res)=>{
 });
 
 
-router.post('/upload', isLoggin, upload.single('video'), generateTranscript,saveTheVideoMetadata, async(req, res)=>{
+router.post('/upload', isLoggin, upload.single('video'), generateTranscript, saveTheVideoMetadata, async(req, res)=>{
 
     const {originalname, size} = req.file;
     const fileSizeReadableFormat = formatFileSize(size);
+    const fileId = res.locals.fileid;
     const transcription = res.locals.transcript;
     
     res.status(200).json({
         message: "Successfully uploaded files",
+        fileId,
         filename: originalname,
         size: fileSizeReadableFormat,
         transcription
@@ -145,16 +147,55 @@ router.post('/upload', isLoggin, upload.single('video'), generateTranscript,save
 });
 
 
-router.get('/downloadTranscript', (req, res)=>{
-    const filePath = path.resolve(__dirname, "../video_transcription/transcription.txt");
-    res.download(filePath, (err)=>{
-        if(err){
-            res.send({
-                error: err,
-                message: 'Error downloading the file'
+router.get('/downloadTranscript/:fileid', async (req, res)=>{
+    
+    const pathMetadata = path.resolve(__dirname, '../video_metadata/data.json');
+    const fileId = req.params.fileid;
+
+    try {
+
+        const metadataObject = JSON.parse(await fs.promises.readFile(pathMetadata, 'utf8', (err, data)=>{
+            if(!err){
+                return data;
+            }
+        }));
+    
+        const fileMetadata = metadataObject.find((el)=>{
+            return el.videoId === fileId;
+        });
+
+        if(!fileMetadata){
+            res.status(304).json({
+                message: 'Not found'
             });
+            return;    
         }
-    })
+    
+        const filePath = fileMetadata.pathFileTranscript;
+        res.download(filePath, (err)=>{
+            if(err){
+                res.send({
+                    error: err,
+                    message: 'Error downloading the file'
+                });
+            }
+        })
+    
+    
+        // const filePath = path.resolve(__dirname, "../video_transcription/transcription.txt");
+        // res.download(filePath, (err)=>{
+        //     if(err){
+        //         res.send({
+        //             error: err,
+        //             message: 'Error downloading the file'
+        //         });
+        //     }
+        // })
+        
+    } catch (error) {
+        console.log(error);
+    }
+
 })
 
 
@@ -261,46 +302,83 @@ async function generateTranscript(req, res, next){
     }
 }
 
-function saveTheVideoMetadata(req, res, next){
+async function saveTheVideoMetadata(req, res, next){
     try {
         
         const filePath = path.resolve(__dirname, '../video_metadata');
+        const pathMetadataFile = path.resolve(__dirname, '../video_metadata/data.json');
+
         const pathFileTranscript = res.locals.filePath;
 
         const videoId = uuidv4();
-        const videoObject = {
-            videoId,
-            pathFileTranscript,
-            ...req.file
-        };
-        const videoJSON = JSON.stringify(videoObject);
+        res.locals.fileid = videoId;
+
+        const videoObject = [
+            {
+                videoId,
+                pathFileTranscript,
+                ...req.file
+            }
+        ];
     
         if(fs.existsSync(filePath)){
-            // cb(null, filePath);
-            fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
-                if(err){
-                    throw err;
-                }
-            })
+
+
+            
+            if(fs.existsSync(pathMetadataFile)){
+                const dataFile = await fs.promises.readFile(pathMetadataFile, 'utf8', (err, data)=>{
+                    if(!err){
+                        return data;
+                    }
+                });
+
+                const dataFileObject = JSON.parse(dataFile);
+                dataFileObject.push(...videoObject);
+
+                const dataFileObjectJSON = JSON.stringify(dataFileObject);
+
+                fs.writeFile(pathMetadataFile, dataFileObjectJSON, (err)=>{
+                    if(err){
+                        throw err;
+                    }
+                });
+
+                return next();
+            }
+
+            if(!fs.existsSync(pathMetadataFile)){
+
+                const videoJSON = JSON.stringify(videoObject);
+                
+                fs.writeFile(pathMetadataFile, videoJSON, (err)=>{
+                    if(err){
+                        throw err;
+                    }
+                });
+                return next();
+            }
+
+
+
         }else{
             fs.mkdir(filePath, (err)=>{
                 if(err){
                     throw err;
                 }
+
+                const videoJSON = JSON.stringify(videoObject);
     
-                fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
+                fs.writeFile(pathMetadataFile, videoJSON, (err)=>{
                     if(err){
                         throw err;
                     }
                 });
-            })
+            });
+
+            return next();
         }
-    
-        // res.status(200).json({
-        //     message: "Successfully uploaded files"
-        // });
         
-        next();
+        // next();
 
     } catch (error) {
         console.log(error);
