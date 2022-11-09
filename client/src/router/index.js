@@ -41,7 +41,7 @@ router.beforeEach(async (to, from, next)=>{
 
     const res = await axios.get('/home');
     const isLogin = res.data.isLogin;
-    console.log(isLogin);
+    // console.log(isLogin);
 
     if(to.name === 'homepage' && isLogin){
       next({

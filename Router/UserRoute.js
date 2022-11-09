@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 const UserModel = require('../Model/User'); 
+const getTranscript = require('../deepgram');
 
 dotenv.config({
     path: '../config.env'
@@ -128,46 +129,33 @@ router.get('/home', isLoggin, async(req, res)=>{
 });
 
 
-router.post('/upload', isLoggin, upload.single('video'), (req, res)=>{
-    try {
+router.post('/upload', isLoggin, upload.single('video'), generateTranscript,saveTheVideoMetadata, async(req, res)=>{
+
+    const {originalname, size} = req.file;
+    const fileSizeReadableFormat = formatFileSize(size);
+    const transcription = res.locals.transcript;
+    
+    res.status(200).json({
+        message: "Successfully uploaded files",
+        filename: originalname,
+        size: fileSizeReadableFormat,
+        transcription
+    });
         
-        const filePath = path.resolve(__dirname, '../video_metadata');
-        const videoId = uuidv4();
-        const videoObject = {
-            videoId,
-            ...req.file
-        };
-        const videoJSON = JSON.stringify(videoObject);
-    
-        if(fs.existsSync(filePath)){
-            // cb(null, filePath);
-            fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
-                if(err){
-                    throw err;
-                }
-            })
-        }else{
-            fs.mkdir(filePath, (err)=>{
-                if(err){
-                    throw err;
-                }
-    
-                fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
-                    if(err){
-                        throw err;
-                    }
-                });
-            })
-        }
-    
-        res.status(200).json({
-            message: "Successfully uploaded files"
-        });
-        
-    } catch (error) {
-        console.log(error);
-    }
 });
+
+
+router.get('/downloadTranscript', (req, res)=>{
+    const filePath = path.resolve(__dirname, "../video_transcription/transcription.txt");
+    res.download(filePath, (err)=>{
+        if(err){
+            res.send({
+                error: err,
+                message: 'Error downloading the file'
+            });
+        }
+    })
+})
 
 
 // router.get('/video', (req, res)=>{
@@ -252,11 +240,82 @@ async function isLoggin(req, res, next){
                 isLogin: false
             });
         }
-        console.log(data);
+        // console.log(data);
         res.locals.user = data;
         next();
     });
 }
+
+async function generateTranscript(req, res, next){
+    try {
+
+        const filePath = req.file.path;
+        const transcript = await getTranscript(filePath);
+        res.locals.transcript = transcript.data;
+        res.locals.filePath = transcript.fileLocation;
+        
+        next();
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+function saveTheVideoMetadata(req, res, next){
+    try {
+        
+        const filePath = path.resolve(__dirname, '../video_metadata');
+        const pathFileTranscript = res.locals.filePath;
+
+        const videoId = uuidv4();
+        const videoObject = {
+            videoId,
+            pathFileTranscript,
+            ...req.file
+        };
+        const videoJSON = JSON.stringify(videoObject);
+    
+        if(fs.existsSync(filePath)){
+            // cb(null, filePath);
+            fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
+                if(err){
+                    throw err;
+                }
+            })
+        }else{
+            fs.mkdir(filePath, (err)=>{
+                if(err){
+                    throw err;
+                }
+    
+                fs.writeFile(path.resolve(__dirname, '../video_metadata/data.json'), videoJSON, (err)=>{
+                    if(err){
+                        throw err;
+                    }
+                });
+            })
+        }
+    
+        // res.status(200).json({
+        //     message: "Successfully uploaded files"
+        // });
+        
+        next();
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
+function formatFileSize(bytes,decimalPoint) {
+    if(bytes == 0) return '0 Bytes';
+    const k = 1000,
+        dm = decimalPoint || 2,
+        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+ }
 
 
 module.exports = router;

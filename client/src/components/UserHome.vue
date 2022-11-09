@@ -14,7 +14,10 @@
         <div :class="classUpload">
           <span class="UserHome__titleOne">Upload the Video for Transcription</span>
           <span class="UserHome__titleTwo">Click on the button or drag & drop files here</span>
-          <button class="UserHome__buttonUpload" @click="uploadFiles">Upload</button>
+          <button class="UserHome__buttonUpload" @click="uploadFiles">
+              Upload 
+            <letter-cube :class="classBtnUploadLoading"></letter-cube>
+          </button>
 
           <div class="UserHome__fileDescriptionHolder">
             <div class="UserHome__IconAndDescription">
@@ -23,9 +26,9 @@
               </div>
               <div class="UserHome__detailsFile">
                 <span class="UserHome__nameFileTitle">File Name</span>
-                <span class="UserHome__nameFile">Video 1</span>
+                <span class="UserHome__nameFile">{{videoData.filename}}</span>
                 <span class="UserHome__sizeTitle">Size</span>
-                <span class="UserHome__sizeFile">10Mb</span>
+                <span class="UserHome__sizeFile">{{videoData.filesize}}</span>
               </div>
             </div>
             <div class="UserHome__btnHolder">
@@ -36,9 +39,8 @@
           <div class="UserHome__transcriptionHolder">
             <span class="UserHome__transcriptionTitle">Transcription</span>
             <div class="UserHome__mainTranscription">
-              <p class="UserHome__wordTranscription">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam?
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam?
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam? Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam? Modi veritatis dignissimos quaerat nulla, ipsum molestias maiores soluta accusantium id repudiandae necessitatibus similique rerum earum possimus corporis! Dolore corrupti repellendus numquam?
+              <p class="UserHome__wordTranscription">
+                {{videoData.transcription}}
               </p>
             </div>
           </div>
@@ -51,6 +53,7 @@
 <script>
 import axios from 'axios';
 import Toastify from 'toastify-js';
+import {LetterCube} from 'vue-loading-spinner';
 
 const fileIcon = require('@/assets/Icons/files-icon.svg');
 
@@ -59,9 +62,17 @@ export default {
     return {
       fileIcon,
       classUpload: 'UserHome__uploadHolder',
+      classBtnUploadLoading: 'UserHome__loadingIcon',
       username: '',
-      videoFile: []
+      videoData: {
+        filename: '',
+        filesize: '',
+        transcription: ''
+      }
     }
+  },
+  components: {
+    LetterCube
   },
   methods: {
     async logout(){
@@ -88,34 +99,59 @@ export default {
         const fileSelected = input.files[0];
         console.log(fileSelected);
 
+        if(fileSelected.type !== 'video/mp4'){
+          input.value = '';
+          this.alertToastify('Only .mp4 video will be accepted', 'var(--flatUI-red)');
+          return;
+        }
+
         const form = new FormData();
         form.append('video', fileSelected);
 
         try {
-          await axios.post('/upload', form, {
+
+          this.classLoadingBtnUploadManipulator(true);
+
+          const postData = await axios.post('/upload', form, {
             headers: {
               "Content-Type": "multipart/form-data"
             }
           });
+
+          this.classLoadingBtnUploadManipulator(false);
+
+          const {filename, size, transcription} = postData.data;
+          this.videoData.filename = filename;
+          this.videoData.filesize = size;
+          this.videoData.transcription = transcription;
 
           // console.log(postData.data.message);
           this.alertToastify('Upload Successful!', 'var(--flatUI-green)');
           this.classActivateManipulator(true);
 
         } catch (error) {
-         console.log(error); 
+          this.alertToastify('Upload Fail!', 'var(--flatUI-red)');
+          this.classLoadingBtnUploadManipulator(false);
+          console.log(error); 
         }
       }
+      
     },
     classActivateManipulator(isActive){
       const classDeactivate = 'UserHome__uploadHolder';
-      const classActivate = 'UserHome__uploadHolder UserHome__uploadHolder--activeTranscript';
+      const classActivate = 'UserHome__uploadHolder UserHome__uploadHolder--loadingToActive UserHome__uploadHolder--activeTranscript';
 
       if(isActive){
         this.classUpload = classActivate;
       }else{
         this.classUpload = classDeactivate;
       }
+    },
+    classLoadingBtnUploadManipulator(isActive){
+      const active = 'UserHome__loadingIcon UserHome__loadingIcon--active';
+      const deactivate = 'UserHome__loadingIcon';
+
+      isActive ? this.classBtnUploadLoading = active : this.classBtnUploadLoading = deactivate;
 
     },
     uploadAgain(){
@@ -221,15 +257,16 @@ export default {
     align-content: center;
 
     .UserHome__uploadHolder{
+      transition: 0.3s ease-in-out;
       width: 60%;
       height: 60%;
       background-color: #fff;
       border-radius: 10px;
       box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+      border: 1px solid #eee;
       display: grid;
       grid-template-rows: 25% 25% 50%;
       justify-content: center;
-      border: 1px solid #eee;
 
       .UserHome__titleOne{
         font-weight: 700;
@@ -249,31 +286,69 @@ export default {
       .UserHome__buttonUpload{
         margin-top: 2rem;
         justify-self: center;
-        // align-self: center;
         width: 20rem;
         height: 3rem;
         border: 0;
         color: #fff;
         border-radius: 10px;
+        position: relative;
         background-color: var(--btn-color);
         box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
         transition: 0.3s ease-in-out;
+
+        .UserHome__loadingIcon{
+          display: none;
+          position: absolute;
+          left: 70%;
+          top: 10%;
+        }
+
+        .UserHome__loadingIcon--active{
+          display: flex;
+          position: absolute;
+          left: 70%;
+          top: 10%;
+        }
 
         &:hover{
           background-color: var(--dark-btn-color);
         }
       }
 
+      .UserHome__buttonUpload,
+      .UserHome__titleOne,
+      .UserHome__titleTwo{
+        display: block;
+      }
+
       .UserHome__fileDescriptionHolder,
       .UserHome__transcriptionHolder{
         display: none;
-        // opacity: 0;
       }
     }
 
 
+  // loading animation
+    .UserHome__uploadHolder--loadingToActive{
+      transition: 0.5s ease-in-out;
+      .UserHome__buttonUpload,
+      .UserHome__titleOne,
+      .UserHome__titleTwo{
+        opacity: 0;
+      }
+
+      .UserHome__fileDescriptionHolder,
+      .UserHome__transcriptionHolder{
+        display: block;
+        opacity: 0;
+      }
+    }
+  // loading animation
+
+
+
     .UserHome__uploadHolder--activeTranscript{
-      transition: transform 0.6s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+      transition: 0.5s ease-in-out;
       height: 80%;
       display: grid;
       grid-template-columns: 40% 60%;
@@ -289,7 +364,7 @@ export default {
       .UserHome__fileDescriptionHolder,
       .UserHome__transcriptionHolder{
         display: block;
-        // opacity: 100%;
+        opacity: 100%;
       }
 
 
@@ -313,7 +388,8 @@ export default {
 
           .UserHome__detailsFile{
             display: grid;
-            grid-template-rows: 10% 15% 10% 15%;
+            grid-template-rows: 10% 20% 10% 20%;
+            grid-template-columns: 100%;
             align-content: center;
             padding: 0 1rem 0 1rem;
 
@@ -325,7 +401,10 @@ export default {
 
             .UserHome__nameFile,
             .UserHome__sizeFile{
-
+              // width: 100%;
+              // max-width: 100%;
+              word-wrap: break-word;
+              overflow: hidden;
             }
           }
         }
