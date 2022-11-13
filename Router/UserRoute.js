@@ -9,6 +9,9 @@ const fs = require('fs');
 
 const UserModel = require('../Model/User'); 
 const getTranscript = require('../deepgram');
+const formatFileSize = require('../Utils/formatFileSize');
+const catchAsync = require('../Utils/catchAsync');
+const AppError = require('../Utils/appError');
 
 dotenv.config({
     path: '../config.env'
@@ -37,9 +40,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage
-})
-
-
+});
 
 router.get('/', (req, res)=>{
     res.status(200).json({
@@ -47,94 +48,92 @@ router.get('/', (req, res)=>{
     });
 });
 
-router.post('/signup', async(req, res)=>{
-    try {
-        
-        const name = req.body.name;
-        const email = req.body.email;
-        const passwordEncrypt = await bcrypt.hash(req.body.password, 12);
+router.post('/signup', (async(req, res, next)=>{
+
+    const {name, email, password} = req.body;
+
     
-        // await UserModel.create({
-        //     name,
-        //     email,
-        //     password: passwordEncrypt
-        // });
+
+    if(name === '' || email === '' || password === ''){
+        return next(new AppError('Name, email, or password is not inserted!', 400))
+    }
     
-        res.status(200).json({
-            name,
-            message: 'User successfully created.'
-        });
+    const passwordEncrypt = await bcrypt.hash(password, 12);
+
+    await UserModel.create({
+        name,
+        email,
+        password: passwordEncrypt
+    });
+
+    res.status(200).json({
+        name,
+        message: 'User successfully created.'
+    });
         
-    } catch (error) {
-        console.log(error);
-        res.status(400).json({
-            message: 'Error'
-        })
+}));
+
+
+router.post('/signin', catchAsync(async (req, res, next)=>{
+
+    const {email, password} = req.body;
+
+    if(!email || !password){
+        return next(new AppError('Please provide email and password', 401));
     }
 
-});
+    const user = await UserModel.findOne({
+        email
+    })
+    .select('+password');
 
-router.post('/signin', async (req,res)=>{
-    try {
-        const {email, password} = req.body;
-
-        if(!email || !password){
-            throw Error('Please provide email and password')
-        }
-
-        const user = await UserModel.findOne({
-            // email: 'mfitrie78@gmail.com'
-            email
-        })
-        .select('+password');
-
-        if(!user){
-            throw Error('Email or password is incorrect');
-        }
-
-        const isValidate = await user.correctPassword(password, user.password);
-        
-        if(!isValidate){
-            throw Error('Email or password is incorrect');
-        }
-
-        // const token = createToken(user._id);
-
-        createSendToken(user._id, req, res);
-    
-        res.status(200).json({
-            message: 'Login sucess',
-            // token
-        })
-        
-    } catch (error) {
-        console.log(error);
-        res.status(401).json({
-            message: error.message
-        });
+    if(!user){
+        return next(new AppError('Email or password is incorrect', 401));
     }
-});
+
+    const isValidate = await user.correctPassword(password, user.password);
+    
+    if(!isValidate){
+        return next(new AppError('Email or password is incorrect', 401));
+    }
+
+    createSendToken(user._id, req, res);
+
+    res.status(200).json({
+        message: 'Login sucess',
+        // token
+    });
+
+}));
 
 
-router.get('/home', isLoggin, async(req, res)=>{
+router.get('/home', isLoggin, catchAsync(async(req, res, next)=>{
     const {id} = res.locals.user;
 
     const user = await UserModel.findById(id);
+
+    if(!user){
+        return next(new AppError( 'No user found  in database', 403));
+    }
 
     res.status(200).json({
         message: 'You allowed!',
         name: user.name,
         isLogin: true
     });
-});
+}));
 
 
-router.post('/upload', isLoggin, upload.single('video'), generateTranscript, saveTheVideoMetadata, async(req, res)=>{
+router.post('/upload', isLoggin, upload.single('video'), generateTranscript, saveTheVideoMetadata, catchAsync(async(req, res, next)=>{
 
     const {originalname, size} = req.file;
     const fileSizeReadableFormat = formatFileSize(size);
     const fileId = res.locals.fileid;
     const transcription = res.locals.transcript;
+ 
+    if(!fileId && !transcription){
+        return next(new AppError( 'fileId and transcription is null', 501));
+    }
     
     res.status(200).json({
         message: "Successfully uploaded files",
@@ -144,59 +143,42 @@ router.post('/upload', isLoggin, upload.single('video'), generateTranscript, sav
         transcription
     });
         
-});
+}));
 
 
-router.get('/downloadTranscript/:fileid', async (req, res)=>{
+router.get('/downloadTranscript/:fileid', catchAsync(async (req, res, next)=>{
     
     const pathMetadata = path.resolve(__dirname, '../video_metadata/data.json');
     const fileId = req.params.fileid;
 
-    try {
-
-        const metadataObject = JSON.parse(await fs.promises.readFile(pathMetadata, 'utf8', (err, data)=>{
-            if(!err){
-                return data;
-            }
-        }));
-    
-        const fileMetadata = metadataObject.find((el)=>{
-            return el.videoId === fileId;
-        });
-
-        if(!fileMetadata){
-            res.status(304).json({
-                message: 'Not found'
-            });
-            return;    
+    const metadataObject = JSON.parse(await fs.promises.readFile(pathMetadata, 'utf8', (err, data)=>{
+        if(err){
+            return next(new AppError('Error reading the file', 500));
         }
-    
-        const filePath = fileMetadata.pathFileTranscript;
-        res.download(filePath, (err)=>{
-            if(err){
-                res.send({
-                    error: err,
-                    message: 'Error downloading the file'
-                });
-            }
-        })
-    
-    
-        // const filePath = path.resolve(__dirname, "../video_transcription/transcription.txt");
-        // res.download(filePath, (err)=>{
-        //     if(err){
-        //         res.send({
-        //             error: err,
-        //             message: 'Error downloading the file'
-        //         });
-        //     }
-        // })
+
+        return data;
         
-    } catch (error) {
-        console.log(error);
+    }));
+
+    const fileMetadata = metadataObject.find((el)=>{
+        return el.videoId === fileId;
+    });
+
+    if(!fileMetadata){
+        return next(new AppError('Transcript not found', 404));
     }
 
-})
+    const filePath = fileMetadata.pathFileTranscript;
+    res.download(filePath, (err)=>{
+        if(err){
+            res.send({
+                error: err,
+                message: 'Error downloading the file'
+            });
+        }
+    });
+
+}));
 
 
 // router.get('/video', (req, res)=>{
@@ -223,7 +205,6 @@ router.get('/downloadTranscript/:fileid', async (req, res)=>{
 
 
 router.get('/logout', (req, res)=>{
-    // console.log(res.locals.user);
 
     res.cookie('jwt','loggedout', {
         // 10 seconds
@@ -311,7 +292,7 @@ async function saveTheVideoMetadata(req, res, next){
         const pathFileTranscript = res.locals.filePath;
 
         const videoId = uuidv4();
-        res.locals.fileid = videoId;
+        // res.locals.fileid = videoId;
 
         const videoObject = [
             {
@@ -386,14 +367,14 @@ async function saveTheVideoMetadata(req, res, next){
 }
 
 
-function formatFileSize(bytes,decimalPoint) {
-    if(bytes == 0) return '0 Bytes';
-    const k = 1000,
-        dm = decimalPoint || 2,
-        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
- }
+// function formatFileSize(bytes,decimalPoint) {
+//     if(bytes == 0) return '0 Bytes';
+//     const k = 1000,
+//         dm = decimalPoint || 2,
+//         sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+//         i = Math.floor(Math.log(bytes) / Math.log(k));
+//     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+// }
 
 
 module.exports = router;

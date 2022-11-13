@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 
 const userRouter = require('../Router/UserRoute');
+const AppError = require('../Utils/appError');
 
 dotenv.config({
     path: path.resolve(__dirname, '../config.env')
@@ -28,10 +29,26 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser())
 app.use('/api/v1/user', userRouter);
-app.all('*', (req, res)=>{
-    res.status(404).json({
-        status: 'fail',
-        message: `Can't find ${req.originalUrl} on this server`
+app.all('*', (req, res, next)=>{
+    
+    // res.status(404).json({
+    //     status: 'fail',
+    //     message: `Can't find ${req.originalUrl} on this server`
+    // });
+
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+
+});
+
+app.use((err, req, res, next)=>{
+    console.log(err);
+    let error = {...err};
+    console.log(error);
+    
+    res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+        stack: err.stack
     });
 });
 
