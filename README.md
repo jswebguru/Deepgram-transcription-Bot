@@ -60,7 +60,7 @@
 [![Product Name Screen Shot][product-screenshot-1]](https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/HomePage.png)
 [![Product Name Screen Shot][product-screenshot-2]](https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/Log%20In.png)
 [![Product Name Screen Shot][product-screenshot-3]](https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/Sign%20Up.png)
-[![Product Name Screen Shot][product-screenshot-4]](https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/User%20Page.png)
+[![Product Name Screen Shot][product-screenshot-4]](https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/User%20page.png)
 [![Product Name Screen Shot][product-screenshot-5]](https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/Transcript%20Conversion.png)
 
 This project's purpose is to convert video .mp4 to get a transcription using [Deepgram API](https://deepgram.com/). They are able to download the transcription after video converting is finished.  The metadata of the user will be generated after the user converts the video and the video will be stored as a file on the server. To use this application, the user needs to sign up first and then sign in.
@@ -110,7 +110,11 @@ Use the `BLANK_README.md` to get started. -->
 [license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/othneildrew
-[product-screenshot-1]: https://github.com/mfitrie/Reddit_ShowerThoughts/blob/feature/ProjectScreenshot/firstpage.png
+[product-screenshot-1]: https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/HomePage.png
+[product-screenshot-2]: https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/Log%20In.png
+[product-screenshot-3]: https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/Sign%20Up.png
+[product-screenshot-4]: https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/User%20page.png
+[product-screenshot-5]: https://github.com/mfitrie/Deepgram-Transcription/tree/feature/Screenshot%20Application/Transcript%20Conversion.png
 [MongoDB-dev]: https://img.shields.io/badge/MongoDB-35495E?style=for-the-badge&logo=mongodb
 [MongoDB-url]: https://www.mongodb.com/
 [Node.js]: https://img.shields.io/badge/Node.Js-35495E?style=for-the-badge&logo=nodedotjs
