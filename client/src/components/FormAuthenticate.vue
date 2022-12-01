@@ -195,7 +195,8 @@ export default {
                     this.alertToastify(`Log in successful`, 'var(--flatUI-green)');
 
                     setTimeout(()=>{
-                        location.assign('/userhome');
+                        // location.assign('/userhome');
+                        this.$router.push({path: '/userhome'});
                     }, 1000);
 
                     return;

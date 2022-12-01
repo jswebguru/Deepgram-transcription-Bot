@@ -83,7 +83,8 @@ export default {
 
             this.alertToastify(`Log out successful`, 'var(--flatUI-green)');
             setTimeout(()=>{
-              location.assign('/');
+              // location.assign('/');
+              this.$router.push({path: '/'});
             }, 1000);
         } catch (error) {
             console.log(error);
@@ -194,7 +195,8 @@ export default {
     })
     .catch(err=>{
       console.log(err);
-      location.assign('/');
+      // location.assign('/');
+      this.$router.push({path: '/'});
     })
     
   },
